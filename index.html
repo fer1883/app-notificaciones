@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Prueba de Notificaciones Push</title>
+</head>
+<body>
+  <h1>Notificaciones Push con FCM</h1>
+  <button id="subscribe">Suscribirse a Notificaciones</button>
+
+  <!-- Firebase scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-messaging-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvGXOOBB1kuG0avnHPtiE71-xZf_wuAhs",
+      authDomain: "push-notification-web-ap-13548.firebaseapp.com",
+      projectId: "push-notification-web-ap-13548",
+      storageBucket: "push-notification-web-ap-13548.appspot.com",
+      messagingSenderId: "925408850443",
+      appId: "1:925408850443:web:c22e8667face0bdb768d0e"
+    };
+
+    // Inicializar Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    const messaging = firebase.messaging();
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/push-notifications-app/service-worker.js')
+        .then(function(registration) {
+          console.log('Service Worker registrado:', registration);
+
+          // Manejador del botón de suscripción
+          document.getElementById('subscribe').addEventListener('click', async () => {
+            try {
+              // Solicita permiso para notificaciones
+              const permission = await Notification.requestPermission();
+              if (permission === 'denied' || permission === 'default') {
+                alert('Permiso de notificaciones denegado o bloqueado. Por favor habilítalo en la configuración del navegador.');
+                return;
+              }
+
+              // Suscripción al servicio de notificaciones
+              const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: 'BOcea8UjyPlIpxyyY5a_dF5LZq-KB9crvoUyqbyZCSThSDm1epfuxLR7lAuaMpFZgqKaMkZsw67PQp91ybW3my8' // Reemplaza con tu clave VAPID pública
+              });
+
+              // Obtiene el token de Firebase Messaging
+              const token = await messaging.getToken({ vapidKey: 'BOcea8UjyPlIpxyyY5a_dF5LZq-KB9crvoUyqbyZCSThSDm1epfuxLR7lAuaMpFZgqKaMkZsw67PQp91ybW3my8', serviceWorkerRegistration: registration });
+              console.log('Token de suscripción:', token);
+
+              // Estructura los datos para enviar al servidor
+              const subscriptionData = {
+                endpoint: subscription.endpoint,
+                keys: {
+                  p256dh: subscription.keys.p256dh,
+                  auth: subscription.keys.auth
+                }
+              };
+
+              // Envía los datos de suscripción al backend
+              await fetch('http://localhost:3000/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(subscriptionData)
+              });
+              alert('Suscripción exitosa');
+            } catch (error) {
+              console.error('Error al obtener el token:', error);
+              alert('Error al suscribirse. Consulta la consola.');
+            }
+          });
+        })
+        .catch(function(error) {
+          console.error('Service Worker no registrado', error);
+          alert('No se pudo registrar el Service Worker');
+        });
+    } else {
+      console.warn('Service Worker no está soportado en este navegador');
+      alert('Service Worker no está soportado en este navegador');
+    }
+  </script>
+</body>
+</html>

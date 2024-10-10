@@ -1,0 +1,32 @@
+### Prueba del endpoint /test
+GET http://localhost:3000/test
+
+### Prueba del endpoint /subscribe
+POST http://localhost:3000/subscribe
+Content-Type: application/json
+
+{
+  "endpoint": "https://example.com",
+  "keys": {
+    "p256dh": "clave_publica_ejemplo",
+    "auth": "clave_auth_ejemplo"
+  }
+}
+
+### Prueba del endpoint /subscriptions
+GET http://localhost:3000/subscriptions
+
+### Prueba Actualización de Suscripción
+PUT http://localhost:3000/subscribe/AX8IqBba72SlqIHYVpaQ
+Content-Type: application/json
+
+{
+  "endpoint": "https://nueva-url.com",
+  "keys": {
+    "p256dh": "nueva_clave_publica",
+    "auth": "nueva_clave_auth"
+  }
+}
+
+### Prueba liminación de Suscripción
+DELETE http://localhost:3000/subscribe/AX8IqBba72SlqIHYVpaQ
